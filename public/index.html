@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head> </head>
+
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/xterm@5.2.1/css/xterm.min.css"
+  />
+  <body>
+    <div id="terminal"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.2.1/lib/xterm.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io("http://localhost:3000");
+
+      socket.emit("client-connected", {
+        greeting: "Hello Server",
+      });
+    </script>
+    <script>
+      var term = new Terminal({ convertEol: true });
+      term.open(document.getElementById("terminal"));
+      term.write("nextbrainPc@root> ");
+      console.log("🚀 ~ file: index.html:25 ~ term:", term);
+
+      let command = "";
+
+      term.onKey((e) => {
+        console.log(e.key);
+        command += e.key;
+        console.log(
+          "🚀 ~ file: index.html:31 ~ term.onKey ~ command:",
+          command
+        );
+        term.write(e.key);
+        if (e.key == "\r") {
+          socket.emit("client-command", {
+            data: command.trim(),
+          });
+          command = "";
+          socket.on("command-response", (data) => {
+            console.log("🚀 ~ file: index.html:42 ~ socket.on ~ data:", data);
+            term.write("\n" + data.data + "\n");
+            term.write("nextbrainPc@root> ");
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
